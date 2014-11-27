@@ -28,6 +28,9 @@ task_context 'Generic' do
     property('odometry_frame', '/std/string', 'odometry').
         doc "the frame name for the odometry frame"
 
+    property('start_pose', '/base/samples/RigidBodyState').
+        dynamic.
+        doc "starting position for odometry"
 
     ##########################
     # i/o ports 

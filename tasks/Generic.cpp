@@ -78,8 +78,10 @@ bool Generic::startHook()
         return false;
 
      // reset absolute odometry integration
-     lastBody2Odometry = envire::TransformWithUncertainty::Identity();
+     //lastBody2Odometry = envire::TransformWithUncertainty::Identity();
 
+    //printf("[Odoemtry] starting with %g/%g/%g\n", start_rbs.position[0], start_rbs.position[1], start_rbs.position[2]);
+    lastBody2Odometry = envire::TransformWithUncertainty(start_rbs);
     return true;
 }
 // void Generic::updateHook()
@@ -99,3 +101,9 @@ bool Generic::startHook()
 //     GenericBase::cleanupHook();
 // }
 
+bool Generic::setStart_pose(::base::samples::RigidBodyState const & value)
+{
+    start_rbs = value;
+    //printf("[Odometry] changed start pos to %g/%g/%g\n", start_rbs.position[0], start_rbs.position[1], start_rbs.position[2]);
+    return(odometry::GenericBase::setStart_pose(value));
+}
