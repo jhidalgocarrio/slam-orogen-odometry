@@ -5,12 +5,12 @@
 using namespace odometry;
 
 Generic::Generic(std::string const& name)
-    : GenericBase(name)
+    : GenericBase(name), is_start_rbs_set(false)
 {
 }
 
 Generic::Generic(std::string const& name, RTT::ExecutionEngine* engine)
-    : GenericBase(name, engine)
+    : GenericBase(name, engine), is_start_rbs_set(false)
 {
 }
 
@@ -39,10 +39,12 @@ void Generic::pushState(base::Time const& ts,
     // also sum up the relative changes in an absolute odometry frame
     // and output to a separate port. 
     lastBody2Odometry = lastBody2Odometry * body2PrevBody;
+
     // need to set the absolute body to world orientation from the imu
     // because of potential drift, and a missing proper initial value
     Eigen::Affine3d body2Odometry = lastBody2Odometry.getTransform();
     body2Odometry.linear() = R_body2World.toRotationMatrix();
+
     lastBody2Odometry.setTransform( body2Odometry );
 
     // this will update the global rotation covariance to that of the IMU,
@@ -81,7 +83,11 @@ bool Generic::startHook()
      //lastBody2Odometry = envire::TransformWithUncertainty::Identity();
 
     //printf("[Odoemtry] starting with %g/%g/%g\n", start_rbs.position[0], start_rbs.position[1], start_rbs.position[2]);
-    lastBody2Odometry = envire::TransformWithUncertainty(start_rbs);
+    if (is_start_rbs_set == true)
+        lastBody2Odometry = envire::TransformWithUncertainty(start_rbs);
+    else 
+        lastBody2Odometry = envire::TransformWithUncertainty::Identity();
+
     return true;
 }
 // void Generic::updateHook()
@@ -103,6 +109,8 @@ bool Generic::startHook()
 
 bool Generic::setStart_pose(::base::samples::RigidBodyState const & value)
 {
+    is_start_rbs_set = true;
+
     start_rbs = value;
     //printf("[Odometry] changed start pos to %g/%g/%g\n", start_rbs.position[0], start_rbs.position[1], start_rbs.position[2]);
     return(odometry::GenericBase::setStart_pose(value));
