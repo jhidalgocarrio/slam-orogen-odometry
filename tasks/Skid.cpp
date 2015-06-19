@@ -43,6 +43,7 @@ double Skid::getMovingSpeed()
             throw std::runtime_error("Did not get needed speed value");
           }
         lastMovingSpeed += state.speed;
+        std::cout<<*it<<"has speed:"<<state.speed <<"\n";
         numWheels++;
     }
 
@@ -57,6 +58,7 @@ double Skid::getMovingSpeed()
             throw std::runtime_error("Did not get needed speed value");
           }
         lastMovingSpeed += state.speed;
+        std::cout<<*it<<"has speed:"<<state.speed <<"\n";
         numWheels++;
     }
 
@@ -66,18 +68,16 @@ double Skid::getMovingSpeed()
     return lastMovingSpeed;
 }
 
-
-void Skid::body2imu_enuTransformerCallback(const base::Time& ts)
+void Skid::orientation_samplesTransformerCallback(const base::Time &ts, const ::base::samples::RigidBodyState &orientation_samples_sample)
 {
+    Eigen::Quaternion <double> qtf(Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitZ())); /** Rotation in quaternion form **/
     //we need to receive an actuator reading first
     if(!gotActuatorReading)
         return;
-    
+
     // use the transformer to get the body2world transformation 
     // this should include the imu reading
-    base::Transform3d body2IMUWorld;
-    if( !_body2imu_world.get( ts, body2IMUWorld ) )
-	return;
+    base::Transform3d body2IMUWorld(qtf * orientation_samples_sample.orientation);
 
     // calculates the rotation from body to world base on the orientation measurment 
     Eigen::Quaterniond R_body2World(body2IMUWorld.rotation()); 
@@ -94,7 +94,7 @@ void Skid::body2imu_enuTransformerCallback(const base::Time& ts)
         double dt = (ts - prev_ts).toSeconds();
         moving_dist = moving_speed * dt;
         prev_ts = ts;
-        
+
         // make sure we don't have any nans or infs flying around
         if( std::isfinite( moving_dist ) )
         {
@@ -144,20 +144,17 @@ bool Skid::configureHook()
 	    _wheelBase.get(),
             leftWheelNames, rightWheelNames));
 
-    _body2imu_world.registerUpdateCallback(boost::bind(&Skid::body2imu_enuTransformerCallback, this, _1));
-
     return true;
 }
 bool Skid::startHook()
 {
     if (! SkidBase::startHook())
         return false;
-    
     prev_ts = base::Time();
     actuatorUpdated = false;
     lastMovingSpeed = 0.0;
     gotActuatorReading = false;
-    
+
     return true;
 }
 void Skid::updateHook()

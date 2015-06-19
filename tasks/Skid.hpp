@@ -38,19 +38,20 @@ namespace odometry {
         double lastMovingSpeed;
         bool gotActuatorReading;
 
-        
+
         std::vector<std::string> leftWheelNames;
         std::vector<std::string> rightWheelNames;
 
         virtual void actuator_samplesTransformerCallback(const base::Time &ts, const ::base::samples::Joints &actuator_samples_sample);
-        void body2imu_enuTransformerCallback(const base::Time &ts);
-        
         /** 
          * returns the average moving speed of the robot at the current time
          */
         double getMovingSpeed();
         double wheelRadius;
-        bool usePosition;        
+        bool usePosition;
+
+        virtual void orientation_samplesTransformerCallback(const base::Time &ts, const ::base::samples::RigidBodyState &orientation_samples_sample);
+
     public:
         /** TaskContext constructor for Skid
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.

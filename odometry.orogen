@@ -117,17 +117,20 @@ task_context 'Skid' do
         needs_reliable_connection.
 	doc 'timestamped motor state samples providing odometry information.'
 
+    input_port('orientation_samples', '/base/samples/RigidBodyState').
+        needs_reliable_connection.
+        doc 'provides timestamped orientation samples.'
+
     ##########################
     # aggregator parameters
     ##########################
 
     transformer() do
-	transformation("body", "imu_world")
-
-	align_port("actuator_samples", 0.001)
+	align_port("actuator_samples", 0.01)
+	align_port("orientation_samples", 0.01)
 	max_latency(0.1)
     end
-    port_driven 'dynamic_transformations'
+    port_driven
 end
 
 task_context 'ContactPointTask' do
