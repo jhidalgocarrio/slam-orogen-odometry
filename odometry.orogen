@@ -93,9 +93,6 @@ task_context 'Skid' do
     # configuration parameters 
     ##########################
 
-    property('wheelRadiusAvg', 'double').
-	doc 'wheel radius avarage'
-
     property('trackWidth', 'double').
 	doc 'track width'
 

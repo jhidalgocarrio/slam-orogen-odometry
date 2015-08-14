@@ -43,7 +43,7 @@ double Skid::getMovingSpeed()
             throw std::runtime_error("Did not get needed speed value");
           }
         lastMovingSpeed += state.speed;
-        std::cout<<*it<<"has speed:"<<state.speed <<"\n";
+        //std::cout<<*it<<"has speed:"<<state.speed <<"\n";
         numWheels++;
     }
 
@@ -62,7 +62,7 @@ double Skid::getMovingSpeed()
         numWheels++;
     }
 
-    lastMovingSpeed = lastMovingSpeed / numWheels * wheelRadius;    
+    lastMovingSpeed = lastMovingSpeed / numWheels;
     actuatorUpdated = false;
 
     return lastMovingSpeed;
@@ -134,12 +134,11 @@ bool Skid::configureHook()
     rightWheelNames = _rightWheelNames.get();
     leftWheelNames = _leftWheelNames.get();
 
-    wheelRadius = _wheelRadiusAvg.value();
     usePosition = _usePosition.get();
 
     odometry = boost::shared_ptr<odometry::SkidOdometry>(new odometry::SkidOdometry(
 	    _odometry_config.get(),
-	    _wheelRadiusAvg.get(),
+	    0.00,
 	    _trackWidth.get(),
 	    _wheelBase.get(),
             leftWheelNames, rightWheelNames));
