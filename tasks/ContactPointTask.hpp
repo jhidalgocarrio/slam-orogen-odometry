@@ -38,8 +38,8 @@ namespace odometry {
         odometry::FootContact* contactOdometry;
         bool gotContactState;
 
-        void contact_samplesTransformerCallback(const base::Time &ts, const ::odometry::BodyContactState &contact_samples_sample);
-        void body2imu_enuTransformerCallback(const base::Time &ts);
+        void contact_samplesCallback(const base::Time &ts, const ::odometry::BodyContactState &contact_samples_sample);
+        virtual void orientation_samplesCallback(const base::Time &ts, const ::base::samples::RigidBodyState &orientation_samples_sample);
 
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -59,7 +59,7 @@ namespace odometry {
 
         /** Default deconstructor of ContactPointTask
          */
-	~ContactPointTask();
+	    ~ContactPointTask();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the

@@ -145,18 +145,20 @@ task_context 'ContactPointTask' do
         needs_reliable_connection.
 	doc 'samples providing information on the contact of the body with the environment'
 
+    input_port('orientation_samples', '/base/samples/RigidBodyState').
+        needs_reliable_connection.
+        doc 'provides timestamped orientation samples.'
+
     ##########################
     # aggregator parameters
     ##########################
 
-    transformer() do
-	transform("body", "imu_enu")
-
-	align_port("contact_samples", 0.01) 
-	max_latency(0.1)
-	transform_priority(10)
+    stream_aligner() do
+	    align_port("contact_samples", 0.01)
+	    align_port("orientation_samples", 0.01)
+	    max_latency(0.1)
     end
 
-    port_driven 'dynamic_transformations'
+    port_driven
 end
 

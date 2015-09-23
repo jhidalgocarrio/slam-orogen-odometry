@@ -20,27 +20,19 @@ ContactPointTask::~ContactPointTask()
 {
 }
 
-void ContactPointTask::contact_samplesTransformerCallback(const base::Time &ts, const ::odometry::BodyContactState &contact_samples_sample)
+void ContactPointTask::contact_samplesCallback(const base::Time &ts, const ::odometry::BodyContactState &contact_samples_sample)
 {
     contactState = contact_samples_sample;
     gotContactState = true;
 }
 
-void ContactPointTask::body2imu_enuTransformerCallback(const base::Time& ts)
+void ContactPointTask::orientation_samplesCallback(const base::Time &ts, const ::base::samples::RigidBodyState &orientation_samples_sample)
 {
     if(!gotContactState)
         return;
-        
-    // use the transformer to get the body2world transformation 
-    // this should include the imu reading
-    base::Transform3d body2IMUWorld;
-    if( !_body2imu_enu.get( ts, body2IMUWorld ) )
-    {
-	return;
-    }
 
     // get only the rotation component
-    Eigen::Quaterniond R_body2World = Eigen::Quaterniond( body2IMUWorld.linear() ); 
+    Eigen::Quaterniond R_body2World(orientation_samples_sample.orientation);
 
     contactOdometry->update(contactState, R_body2World);
 
@@ -70,10 +62,8 @@ bool ContactPointTask::startHook()
     delete contactOdometry;
     contactOdometry = new odometry::FootContact(odometryConfiguration);
 
-    _body2imu_enu.registerUpdateCallback(boost::bind(&ContactPointTask::body2imu_enuTransformerCallback, this, _1));
-    
     gotContactState = false;
-    
+
     return true;
 }
 // void ContactPointTask::updateHook()
