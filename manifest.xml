@@ -6,6 +6,5 @@
   <depend package="drivers/orogen/transformer" />
   <depend package="base/orogen/types" />
   <depend package="slam/odometry" />
-  <depend package="slam/envire" />
   <tags>stable</tags>
 </package>

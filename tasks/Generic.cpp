@@ -19,7 +19,7 @@ Generic::~Generic()
 }
 
 void Generic::pushState(base::Time const& ts,
-	envire::TransformWithUncertainty& body2PrevBody,
+	base::TransformWithCovariance& body2PrevBody,
 	base::Quaterniond const& R_body2World,
         base::Vector3d const& velocity,
         base::Vector3d const& angular_velocity)
@@ -28,7 +28,9 @@ void Generic::pushState(base::Time const& ts,
     base::samples::RigidBodyState state;
     state.invalidate();
     state.time = ts;
-    body2PrevBody.copyToRigidBodyState( state );
+    state.setTransform(body2PrevBody.getTransform());
+    state.cov_position = body2PrevBody.getTranslationCov();
+    state.cov_orientation = body2PrevBody.getOrientationCov();
     state.angular_velocity = angular_velocity;
     state.velocity = velocity;
 
@@ -58,7 +60,9 @@ void Generic::pushState(base::Time const& ts,
 
     state.sourceFrame = _body_frame_output_name.get();
     state.targetFrame = _odometry_frame_output_name.get();
-    lastBody2Odometry.copyToRigidBodyState( state );
+    state.setTransform(lastBody2Odometry.getTransform());
+    state.cov_position = lastBody2Odometry.getTranslationCov();
+    state.cov_orientation = lastBody2Odometry.getOrientationCov();
 
     // write to port for summed odometry readings
     _odometry_samples.write( state );
@@ -86,10 +90,10 @@ bool Generic::startHook()
             temp.position = base::Vector3d(0,0,0);
         if(!temp.hasValidOrientation())
             temp.orientation = base::Orientation(1,0,0,0);
-        lastBody2Odometry = envire::TransformWithUncertainty(temp);
+        lastBody2Odometry = base::TransformWithCovariance(temp);
     }
     else
-        lastBody2Odometry = envire::TransformWithUncertainty::Identity();
+        lastBody2Odometry = base::TransformWithCovariance::Identity();
     return true;
 }
 

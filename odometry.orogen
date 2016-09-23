@@ -3,7 +3,6 @@ version '0.1'
 
 import_types_from 'base'
 using_library "odometry"
-using_library "envire"
 
 import_types_from 'odometry/Configuration.hpp'
 import_types_from 'odometry/ContactState.hpp'

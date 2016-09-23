@@ -145,7 +145,7 @@ void Skid::actuator_samplesTransformerCallback(const base::Time &ts, const base:
     }
 
     // create a transform with uncertainty based on the odometry 
-    envire::TransformWithUncertainty body2PrevBody( 
+    base::TransformWithCovariance body2PrevBody( 
             odometry->getPoseDelta().toTransform(),
             odometry->getPoseError() );
 

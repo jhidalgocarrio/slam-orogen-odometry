@@ -4,7 +4,7 @@
 #define ODOMETRY_GENERIC_TASK_HPP
 
 #include "odometry/GenericBase.hpp"
-#include <envire/Core.hpp>
+#include <base/TransformWithCovariance.hpp>
 
 namespace base
 {
@@ -37,7 +37,7 @@ namespace odometry {
     protected:
 	
 	/** previous absolute odometry transformation */
-	envire::TransformWithUncertainty lastBody2Odometry;
+	base::TransformWithCovariance lastBody2Odometry;
 
 	/** 
 	 * Call this method to write the combined odometry to the
@@ -49,7 +49,7 @@ namespace odometry {
 	 * @param angular_velocity - optional angular velocity
 	 */
         void pushState(base::Time const& ts,
-		envire::TransformWithUncertainty& body2prevbody,
+		base::TransformWithCovariance& body2prevbody,
                 base::Quaterniond const& R_body2world,
                 base::Vector3d const& velocity = base::unknown<base::Vector3d>(),
                 base::Vector3d const& angular_velocity = base::unknown<base::Vector3d>());
