@@ -91,7 +91,9 @@ void Skid::actuator_samplesTransformerCallback(const base::Time &ts, const base:
 
     // use the transformer to get the body2world transformation 
     // this should include the imu reading
-    base::Transform3d body2IMUWorld(qtf * orientation_samples_sample.orientation);
+    base::Transform3d body2IMUWorld;
+    if( !_body2imu_world.get( ts, body2IMUWorld ) )
+	    return;
 
     // calculates the rotation from body to world base on the orientation measurment 
     Eigen::Quaterniond R_body2World(body2IMUWorld.rotation()); 

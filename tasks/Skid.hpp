@@ -50,9 +50,6 @@ namespace odometry {
         double getMovingSpeed();
         double wheelRadius;
         bool usePosition;
-
-        virtual void orientation_samplesTransformerCallback(const base::Time &ts, const ::base::samples::RigidBodyState &orientation_samples_sample);
-
     public:
         /** TaskContext constructor for Skid
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
