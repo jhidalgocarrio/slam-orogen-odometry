@@ -22,14 +22,13 @@ task_context 'Generic' do
     property('odometry_config', '/odometry/Configuration').
 	doc 'configuration struct for the asguard odometry class'
 
-    property('body_frame', '/std/string', 'body').
+    property('body_frame_output_name', '/std/string', 'body').
         doc "the frame name for the body frame"
 
-    property('odometry_frame', '/std/string', 'odometry').
+    property('odometry_frame_output_name', '/std/string', 'odometry').
         doc "the frame name for the odometry frame"
 
     property('start_pose', '/base/samples/RigidBodyState').
-        dynamic.
         doc "starting position for odometry"
 
     ##########################
@@ -44,8 +43,8 @@ task_context 'Generic' do
 
 end
 
-task_context 'Skid4OdometryTask' do
-    doc "normal skid-steering odometry"
+task_context 'LatOdom' do
+    doc "Advanced skid-steering odometry for any number of omnidirectional skid steering wheels able to drive lateral"
     subclasses "Generic"
 
     ##########################
@@ -53,34 +52,45 @@ task_context 'Skid4OdometryTask' do
     ##########################
 
     property('wheelRadiusAvg', 'double').
-	doc 'wheel radius avarage'
+        doc 'wheel radius avarage'
 
     property('trackWidth', 'double').
-	doc 'track width'
+        doc 'track width'
 
     property('wheelBase', 'double').
         doc 'wheel base'
+
+    property('leftWheelNames', 'std/vector<std/string>').
+        doc 'left wheel jointnames'
+
+    property('rightWheelNames', 'std/vector<std/string>').
+        doc 'right wheel jointnames'
+    
+    property('leftSteeringNames', 'std/vector<std/string>').
+        doc 'left steering jointnames'
+
+    property('rightSteeringNames', 'std/vector<std/string>').
+        doc 'right steering jointnames'
+    
 
     ##########################
     # i/o ports 
     ##########################
 
-    input_port('actuator_samples', '/base/actuators/Status').
+    input_port('actuator_samples', '/base/samples/Joints').
         needs_reliable_connection.
-	doc 'timestamped motor state samples providing odometry information.'
-   
-    output_port('bodystate_samples', '/odometry/BodyState').
-	doc 'timestamped robot bodystate information'
+        doc 'timestamped motor state samples providing also steering odometry information.'
+       
 
     ##########################
     # aggregator parameters
     ##########################
 
     transformer() do
-	transformation("body", "imu_enu")
+        transformation("body", "imu_world")
 
-	align_port("actuator_samples", 0.001)
-	max_latency(0.1)
+        align_port("actuator_samples", 0.001)
+        max_latency(0.1)
     end
     port_driven 'dynamic_transformations'
 end
@@ -93,18 +103,21 @@ task_context 'Skid' do
     # configuration parameters 
     ##########################
 
+    property('wheelRadiusAvg', 'double').
+        doc 'wheel radius avarage'
+
     property('trackWidth', 'double').
-	doc 'track width'
+        doc 'track width'
 
     property('wheelBase', 'double').
-	doc 'wheel base'
+        doc 'wheel base'
 
     property('leftWheelNames', 'std/vector<std/string>').
-	doc 'wheel base'
+        doc 'wheel base'
 
     property('rightWheelNames', 'std/vector<std/string>').
-	doc 'wheel base'
-	
+        doc 'wheel base'
+        
     property('usePosition', 'bool').
         doc 'If this value is set to true, the position field of the actuator samples will be used to calculate the translation'
 
@@ -115,7 +128,7 @@ task_context 'Skid' do
 
     input_port('actuator_samples', '/base/samples/Joints').
         needs_reliable_connection.
-	doc 'timestamped motor state samples providing odometry information.'
+        doc 'timestamped motor state samples providing odometry information.'
 
     input_port('orientation_samples', '/base/samples/RigidBodyState').
         needs_reliable_connection.
@@ -126,9 +139,10 @@ task_context 'Skid' do
     ##########################
 
     transformer() do
-	align_port("actuator_samples", 0.01)
-	align_port("orientation_samples", 0.01)
-	max_latency(0.1)
+        transformation("body", "imu_world")
+
+        align_port("actuator_samples", 0.001)
+        max_latency(0.1)
     end
     port_driven
 end

@@ -38,8 +38,6 @@ namespace odometry {
 	
 	/** previous absolute odometry transformation */
 	envire::TransformWithUncertainty lastBody2Odometry;
-    base::samples::RigidBodyState start_rbs;
-    bool is_start_rbs_set;
 
 	/** 
 	 * Call this method to write the combined odometry to the
@@ -130,8 +128,6 @@ namespace odometry {
          * before calling start() again.
          */
         // void cleanupHook();
-
-         virtual bool setStart_pose(::base::samples::RigidBodyState const & value);
     };
 }
 

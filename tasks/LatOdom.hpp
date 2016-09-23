@@ -1,59 +1,70 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
 
-#ifndef ODOMETRY_SKID4ODOMETRYTASK_TASK_HPP
-#define ODOMETRY_SKID4ODOMETRYTASK_TASK_HPP
+#ifndef ODOMETRY_SKIDLATERAL_TASK_HPP
+#define ODOMETRY_SKIDLATERAL_TASK_HPP
 
-#include "odometry/Skid4OdometryTaskBase.hpp"
+#include "odometry/LatOdomBase.hpp"
 #include <odometry/Odometry.hpp>
 
-namespace odometry {
+namespace odometry{
 
-    /*! \class Skid4OdometryTask 
+    /*! \class LatOdom
      * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
      * Essential interfaces are operations, data flow ports and properties. These interfaces have been defined using the oroGen specification.
      * In order to modify the interfaces you should (re)use oroGen and rely on the associated workflow.
-     * normal skid-steering odometry
+     * Advanced skid-steering odometry for any number of omnidirectional skid steering wheels able to drive lateral
      * \details
      * The name of a TaskContext is primarily defined via:
      \verbatim
      deployment 'deployment_name'
-         task('custom_task_name','odometry::Skid4OdometryTask')
+         task('custom_task_name','odometry::LatOdom')
      end
      \endverbatim
-     *  It can be dynamically adapted when the deployment is called with a prefix argument. 
+     *  It can be dynamically adapted when the deployment is called with a prefix argument.
      */
-    class Skid4OdometryTask : public Skid4OdometryTaskBase
+    class LatOdom : public LatOdomBase
     {
-	friend class Skid4OdometryTaskBase;
+        friend class LatOdomBase;
     protected:
 
-	bool is_init; 
-      	/** current robot body state */
-	odometry::BodyState body_state;
-	
-	/** Odometry object */
-	boost::shared_ptr<odometry::Skid4Odometry> od;
+        /** Odometry object */
+        boost::shared_ptr<odometry::SkidOdometry> odometry;
 
-	virtual void actuator_samplesTransformerCallback(const base::Time& ts, const base::actuators::Status& actuator_samples_sample);
-        void body2imu_enuTransformerCallback(const base::Time &ts);
+        /* time_stamp of last measurement */
+        base::Time prev_ts;
+
+        base::samples::Joints currentActuatorSample;
+        bool actuatorUpdated;
+        bool gotSteeringActuatorReading = false;
+
+        
+        std::vector<std::string> leftWheelNames;
+        std::vector<std::string> rightWheelNames;
+        std::vector<std::string> leftSteeringNames;
+        std::vector<std::string> rightSteeringNames;
+        
+        void printInvalidSample();
+        double wheelRadius;
+        
+        virtual void actuator_samplesTransformerCallback(const base::Time &ts, const ::base::samples::Joints &actuator_samples_sample);
 
     public:
-        /** TaskContext constructor for Skid4OdometryTask
+        /** TaskContext constructor for LatOdom
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
          * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
          */
-        Skid4OdometryTask(std::string const& name = "odometry::Skid4OdometryTask");
+        LatOdom(std::string const& name = "odometry::LatOdom");
 
-        /** TaskContext constructor for Skid4OdometryTask 
-         * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices. 
-         * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task. 
+        /** TaskContext constructor for LatOdom
+         * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices.
+         * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task.
          * 
          */
-        Skid4OdometryTask(std::string const& name, RTT::ExecutionEngine* engine);
+        LatOdom(std::string const& name, RTT::ExecutionEngine* engine);
 
-        /** Default deconstructor of Skid4OdometryTask
+        /** Default deconstructor of LatOdom
          */
-	~Skid4OdometryTask();
+        ~LatOdom();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the
@@ -84,7 +95,7 @@ namespace odometry {
          *
          * The error(), exception() and fatal() calls, when called in this hook,
          * allow to get into the associated RunTimeError, Exception and
-         * FatalError states. 
+         * FatalError states.
          *
          * In the first case, updateHook() is still called, and recover() allows
          * you to go back into the Running state.  In the second case, the
@@ -100,18 +111,18 @@ namespace odometry {
          *
          * Call recover() to go back in the Runtime state.
          */
-        // void errorHook();
+        void errorHook();
 
         /** This hook is called by Orocos when the state machine transitions
          * from Running to Stopped after stop() has been called.
          */
-        // void stopHook();
+        void stopHook();
 
         /** This hook is called by Orocos when the state machine transitions
          * from Stopped to PreOperational, requiring the call to configureHook()
          * before calling start() again.
          */
-        // void cleanupHook();
+        void cleanupHook();
     };
 }
 

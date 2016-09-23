@@ -1,6 +1,7 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.cpp */
 
 #include "Skid.hpp"
+#include <sstream>
 
 using namespace odometry;
 
@@ -18,48 +19,62 @@ Skid::~Skid()
 {
 }
 
-void Skid::actuator_samplesTransformerCallback(const base::Time &ts, const ::base::samples::Joints &actuator_samples)
+void Skid::printInvalidSample()
 {
-    currentActuatorSample = actuator_samples;
-    actuatorUpdated = true;
-    gotActuatorReading = true;
+    std::cerr << "Invalid actuator sample:" << std::endl;
+    std::cerr << "  Expected the following joint names:" << std::endl;
+    std::stringstream s;
+    std::copy(leftWheelNames.begin(),leftWheelNames.end(), std::ostream_iterator<std::string>(s,", "));
+    std::copy(rightWheelNames.begin(),rightWheelNames.end(), std::ostream_iterator<std::string>(s,", "));
+    std::cerr << "    " << s.str() << std::endl;
+    std::cerr << "  But got the following joint names:" << std::endl;
+    std::stringstream s2;
+    std::copy(currentActuatorSample.names.begin(),currentActuatorSample.names.end(), std::ostream_iterator<std::string>(s2,", "));
+    std::cerr << "    " << s2.str() << std::endl;
 }
 
 double Skid::getMovingSpeed()
 {
     if(!actuatorUpdated)
         return lastMovingSpeed;
-    
+
     // calculate average speed of all wheels as velocity over ground
     int numWheels = 0;
-    for(std::vector<std::string>::const_iterator it = rightWheelNames.begin();
-        it != rightWheelNames.end(); it++)
-    {
-        base::JointState const &state(currentActuatorSample[*it]);
-        if(!state.hasSpeed())
-          {
-            lastMovingSpeed = 0;
-            return lastMovingSpeed;
-            throw std::runtime_error("Did not get needed speed value");
-          }
-        lastMovingSpeed += state.speed;
-        //std::cout<<*it<<"has speed:"<<state.speed <<"\n";
-        numWheels++;
-    }
 
-    for(std::vector<std::string>::const_iterator it = leftWheelNames.begin();
-        it != leftWheelNames.end(); it++)
+    try
     {
-        base::JointState const &state(currentActuatorSample[*it]);
-        if(!state.hasSpeed())
-          {
-            lastMovingSpeed = 0;
-            return lastMovingSpeed;
-            throw std::runtime_error("Did not get needed speed value");
-          }
-        lastMovingSpeed += state.speed;
-        std::cout<<*it<<"has speed:"<<state.speed <<"\n";
-        numWheels++;
+        for(std::vector<std::string>::const_iterator it = rightWheelNames.begin();
+            it != rightWheelNames.end(); it++)
+        {
+            base::JointState const &state(currentActuatorSample[*it]);
+            if(!state.hasSpeed())
+              {
+                lastMovingSpeed = 0;
+                return lastMovingSpeed;
+                throw std::runtime_error("Did not get needed speed value");
+              }
+            lastMovingSpeed += state.speed;
+            numWheels++;
+        }
+
+        for(std::vector<std::string>::const_iterator it = leftWheelNames.begin();
+            it != leftWheelNames.end(); it++)
+        {
+            base::JointState const &state(currentActuatorSample[*it]);
+            if(!state.hasSpeed())
+              {
+                lastMovingSpeed = 0;
+                return lastMovingSpeed;
+                throw std::runtime_error("Did not get needed speed value");
+              }
+            lastMovingSpeed += state.speed;
+            numWheels++;
+        }
+    }
+    catch(const base::NamedVector<base::JointState>::InvalidName &e)
+    {
+        printInvalidSample();
+        error(EXCEPTION);
     }
 
     lastMovingSpeed = lastMovingSpeed / numWheels;
@@ -68,12 +83,11 @@ double Skid::getMovingSpeed()
     return lastMovingSpeed;
 }
 
-void Skid::orientation_samplesTransformerCallback(const base::Time &ts, const ::base::samples::RigidBodyState &orientation_samples_sample)
+
+void Skid::actuator_samplesTransformerCallback(const base::Time &ts, const base::samples::Joints &actuator_samples)
 {
-    Eigen::Quaternion <double> qtf(Eigen::AngleAxisd(0.0, Eigen::Vector3d::UnitZ())); /** Rotation in quaternion form **/
-    //we need to receive an actuator reading first
-    if(!gotActuatorReading)
-        return;
+    currentActuatorSample = actuator_samples;
+    actuatorUpdated = true;
 
     // use the transformer to get the body2world transformation 
     // this should include the imu reading
@@ -99,7 +113,15 @@ void Skid::orientation_samplesTransformerCallback(const base::Time &ts, const ::
         if( std::isfinite( moving_dist ) )
         {
             // update the odometry
-            odometry->update( moving_dist, R_body2World );
+            try
+            {
+                odometry->update( moving_dist, R_body2World );
+            }
+            catch(const base::NamedVector<base::JointState>::InvalidName &e)
+            {
+                printInvalidSample();
+                error(EXCEPTION);
+            }
         }
         else
         {
@@ -109,7 +131,15 @@ void Skid::orientation_samplesTransformerCallback(const base::Time &ts, const ::
     }
     else
     {
-        odometry->update(currentActuatorSample, R_body2World);
+        try
+        {
+            odometry->update(currentActuatorSample, R_body2World);
+        }
+        catch(const base::NamedVector<base::JointState>::InvalidName &e)
+        {
+            printInvalidSample();
+            error(EXCEPTION);
+        }
     }
 
     // create a transform with uncertainty based on the odometry 
@@ -152,8 +182,6 @@ bool Skid::startHook()
     prev_ts = base::Time();
     actuatorUpdated = false;
     lastMovingSpeed = 0.0;
-    gotActuatorReading = false;
-
     return true;
 }
 void Skid::updateHook()
