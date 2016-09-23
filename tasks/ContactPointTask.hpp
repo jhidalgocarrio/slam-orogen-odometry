@@ -38,8 +38,8 @@ namespace odometry {
         odometry::FootContact* contactOdometry;
         bool gotContactState;
 
-        void contact_samplesCallback(const base::Time &ts, const ::odometry::BodyContactState &contact_samples_sample);
-        virtual void orientation_samplesCallback(const base::Time &ts, const ::base::samples::RigidBodyState &orientation_samples_sample);
+        void contact_samplesTransformerCallback(const base::Time &ts, const ::odometry::BodyContactState &contact_samples_sample);
+        virtual void orientation_samplesTransformerCallback(const base::Time &ts, const ::base::samples::RigidBodyState &orientation_samples_sample);
 
     public:
         EIGEN_MAKE_ALIGNED_OPERATOR_NEW

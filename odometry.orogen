@@ -143,7 +143,7 @@ task_context 'ContactPointTask' do
 
     input_port('contact_samples', '/odometry/BodyContactState').
         needs_reliable_connection.
-	doc 'samples providing information on the contact of the body with the environment'
+        doc 'samples providing information on the contact of the body with the environment'
 
     input_port('orientation_samples', '/base/samples/RigidBodyState').
         needs_reliable_connection.
@@ -153,10 +153,11 @@ task_context 'ContactPointTask' do
     # aggregator parameters
     ##########################
 
-    stream_aligner() do
-	    align_port("contact_samples", 0.01)
-	    align_port("orientation_samples", 0.01)
-	    max_latency(0.1)
+    transformer() do
+        transform "imu", "body" # imu in body in "Source in target" convention (Tbody_imu in frames convention)
+        align_port("contact_samples", 0.01)
+        align_port("orientation_samples", 0.01)
+        max_latency(0.1)
     end
 
     port_driven
